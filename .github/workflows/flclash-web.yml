@@ -193,6 +193,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
           readme-filepath: ./README.md
-          short-description: "FlClash compiled to native Flutter Web with embedded Clash.Meta core (Single binary/container, No VNC)"
+          short-description: "FlClash compiled to native Flutter Web with embedded Clash.Meta core."
           enable-url-completion: true
 
