@@ -12,18 +12,10 @@ on:
     - cron: '0 2 * * *'
   workflow_dispatch:
     inputs:
-      sync_upstream:
-        description: 'Pull latest upstream chen08209/FlClash before building'
+      upstream_tag:
+        description: 'Target upstream FlClash tag (leave "latest" for newest stable release, e.g. v0.9.2)'
         required: false
-        default: 'false'
-        type: choice
-        options:
-          - 'false'
-          - 'true'
-      upstream_ref:
-        description: 'Upstream FlClash git ref/branch/tag to sync (when sync_upstream=true)'
-        required: false
-        default: 'main'
+        default: 'latest'
         type: string
 
 permissions:
@@ -42,6 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.meta.outputs.version }}
+      flclash_tag: ${{ steps.meta.outputs.flclash_tag }}
     steps:
       - name: Use HTTPS for GitHub submodules
         run: git config --global url."https://github.com/".insteadOf "git@github.com:"
@@ -50,24 +43,50 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          fetch-depth: 0
 
-      - name: Sync latest upstream FlClash (if requested or scheduled)
-        if: github.event_name == 'schedule' || inputs.sync_upstream == 'true'
-        run: |
-          UPSTREAM_REF="${{ inputs.upstream_ref || 'main' }}"
-          echo "Syncing FlClash with upstream ref: ${UPSTREAM_REF}"
-          git -C FlClash remote add upstream https://github.com/chen08209/FlClash.git 2>/dev/null || true
-          git -C FlClash fetch upstream "${UPSTREAM_REF}" --depth=1
-          git -C FlClash checkout FETCH_HEAD
-          git -C FlClash submodule update --init --recursive
-
-      - name: Extract version & build config
+      - name: Resolve and checkout upstream FlClash release tag
         id: meta
         run: |
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git -C FlClash remote add upstream https://github.com/chen08209/FlClash.git 2>/dev/null || true
+          git -C FlClash fetch upstream --tags --depth=1
+
+          INPUT_TAG="${{ inputs.upstream_tag || 'latest' }}"
+          if [ "${INPUT_TAG}" = "latest" ]; then
+            # Filter out pre-release and debug tags to get the latest formal release tag
+            LATEST_TAG="$(git -C FlClash tag -l "v*" --sort="version:refname" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | tail -n 1)"
+            if [ -z "${LATEST_TAG}" ]; then
+              LATEST_TAG="$(git -C FlClash tag -l "v*" --sort="version:refname" | tail -n 1)"
+            fi
+            TARGET_TAG="${LATEST_TAG}"
+          else
+            TARGET_TAG="${INPUT_TAG}"
+          fi
+
+          echo "Targeting upstream FlClash tag: ${TARGET_TAG}"
+          git -C FlClash checkout -q "${TARGET_TAG}"
+
+          # Sync Clash.Meta submodule
+          SUBMODULE_COMMIT="$(git -C FlClash ls-tree HEAD core/Clash.Meta 2>/dev/null | awk '{print $3}' || true)"
+          if [ -n "${SUBMODULE_COMMIT}" ]; then
+            echo "Syncing Clash.Meta submodule (${SUBMODULE_COMMIT})..."
+            rm -rf FlClash/core/Clash.Meta FlClash/.git/modules/core/Clash.Meta
+            mkdir -p FlClash/core/Clash.Meta
+            git -C FlClash/core/Clash.Meta init
+            git -C FlClash/core/Clash.Meta remote add origin https://github.com/chen08209/Clash.Meta.git
+            git -C FlClash/core/Clash.Meta fetch --depth 1 origin "${SUBMODULE_COMMIT}"
+            git -C FlClash/core/Clash.Meta checkout FETCH_HEAD
+          fi
+
           RAW_VER="$(sed -n 's/^version: *\([^+ ]*\).*/\1/p' FlClash/pubspec.yaml | head -n 1)"
           TAGS="$(sed -n 's/^tags: *//p' FlClash/build_config.yaml || echo 'with_gvisor')"
-          echo "version=${RAW_VER:-0.8.0}" >> "$GITHUB_OUTPUT"
+          VERSION="${RAW_VER:-${TARGET_TAG#v}}"
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "flclash_tag=${TARGET_TAG}" >> "$GITHUB_OUTPUT"
           echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+          echo "::notice title=FlClash Upstream Version::Building with FlClash tag ${TARGET_TAG} (version ${VERSION})"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -94,7 +113,7 @@ jobs:
           python3 scripts/prepare_web.py --apply
           cd FlClash
           flutter pub get
-          flutter build web --release --no-tree-shake-icons --dart-define=APP_ENV=stable
+          flutter build web --release --no-tree-shake-icons --dart-define=APP_ENV=stable --build-name="${{ steps.meta.outputs.version }}"
           cd ..
           python3 scripts/prepare_web.py --revert
 
@@ -108,7 +127,8 @@ jobs:
           for ARCH in amd64 arm64; do
             echo "Building FlClash-web-linux-${ARCH}..."
             CGO_ENABLED=0 GOOS=linux GOARCH="${ARCH}" \
-              go build -trimpath -tags "${{ steps.meta.outputs.tags }}" -ldflags "-w -s" \
+              go build -trimpath -tags "${{ steps.meta.outputs.tags }}" \
+              -ldflags "-w -s -X main.Version=${{ steps.meta.outputs.version }}" \
               -o "../../dist/FlClash-web-linux-${ARCH}" ./cmd/flclash-web
             chmod +x "../../dist/FlClash-web-linux-${ARCH}"
           done
@@ -127,10 +147,12 @@ jobs:
           path: FlClash/build/web
           retention-days: 7
 
-      - name: Publish GitHub Release (on tag push)
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: "v${{ steps.meta.outputs.version }}"
+          name: "FlClash-web v${{ steps.meta.outputs.version }}"
           files: |
             dist/FlClash-web-linux-amd64
             dist/FlClash-web-linux-arm64

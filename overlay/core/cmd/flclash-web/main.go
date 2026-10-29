@@ -15,6 +15,8 @@ import (
 //go:embed all:web_dist
 var embeddedWebDist embed.FS
 
+var Version = "dev"
+
 func defaultDataDir() string {
 	if env := os.Getenv("FLCLASH_DATA_DIR"); env != "" {
 		return env
@@ -71,7 +73,7 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Println("FlClash-web (Clash.Meta / Mihomo core + native Flutter Web UI)")
+		fmt.Printf("FlClash-web v%s (Clash.Meta core + native Flutter Web UI)\n", Version)
 		return
 	}
 

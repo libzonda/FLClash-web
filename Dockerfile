@@ -40,8 +40,9 @@ RUN if [ ! -f /workspace/FlClash/web/sqlite3.wasm ]; then \
 # Apply non-destructive Web adaptation & compile native Flutter Web bundle
 RUN python3 /workspace/scripts/prepare_web.py --apply \
     && cd /workspace/FlClash \
+    && VER="$(sed -n 's/^version: *\([^+ ]*\).*/\1/p' pubspec.yaml | head -n 1)" \
     && flutter pub get \
-    && flutter build web --release --no-tree-shake-icons --dart-define=APP_ENV=stable
+    && flutter build web --release --no-tree-shake-icons --dart-define=APP_ENV=stable --build-name="${VER:-0.9.2}"
 
 # ==============================================================================
 # Stage 2: Build Go Core + Embedded Web Server Static Binary
@@ -56,12 +57,14 @@ ENV GOTOOLCHAIN=auto \
 
 WORKDIR /workspace/FlClash/core
 COPY FlClash/build_config.yaml /workspace/FlClash/build_config.yaml
+COPY FlClash/pubspec.yaml /workspace/FlClash/pubspec.yaml
 COPY FlClash/core/ ./
 COPY --from=web-builder /workspace/FlClash/build/web/ ./cmd/flclash-web/web_dist/
 
 RUN TAGS="$(sed -n 's/^tags: *//p' /workspace/FlClash/build_config.yaml || echo 'with_gvisor')" && \
+    VER="$(sed -n 's/^version: *\([^+ ]*\).*/\1/p' /workspace/FlClash/pubspec.yaml | head -n 1)" && \
     CGO_ENABLED=0 GOOS="${TARGETOS}" GOARCH="${TARGETARCH}" \
-    go build -trimpath -tags "${TAGS}" -ldflags "-w -s" \
+    go build -trimpath -tags "${TAGS}" -ldflags "-w -s -X main.Version=${VER:-0.9.2}" \
     -o /out/FlClash-web ./cmd/flclash-web
 
 # ==============================================================================
