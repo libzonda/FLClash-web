@@ -198,7 +198,7 @@ jobs:
               zh = f.read()
 
           # Strip language switcher block from English README
-          en_clean = re.sub(r"<p align=\"center\">\s*.*?(?:English|简体中文).*?</p>\s*", "", en, flags=re.DOTALL)
+          en_clean = re.sub(r"<p align=\"center\">\s*(?:(?!</p>).)*?(?:English|简体中文).*?</p>\s*", "", en, flags=re.DOTALL)
 
           # Extract Chinese sections from introduction onwards
           zh_match = re.search(r"## 1 项目介绍.*", zh, re.DOTALL)
@@ -219,6 +219,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
           readme-filepath: ./README_DOCKERHUB.md
-          short-description: "FlClash compiled to native Flutter Web with embedded Clash.Meta core."
+          short-description: "A Flutter Web build of FlClash."
           enable-url-completion: true
 

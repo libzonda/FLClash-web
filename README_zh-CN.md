@@ -3,7 +3,18 @@
 </h1>
 
 <p align="center">
+  <b>一个 Flutter Web 构建的 FlClash</b>
+</p>
+
+<p align="center">
   <a href="README.md">English</a> | <b>简体中文</b>
+</p>
+
+<p align="center">
+  <a href="https://github.com/libzonda/FLClash-web/releases"><img src="https://img.shields.io/github/v/release/libzonda/FLClash-web?style=flat-square" alt="Release"></a>
+  <a href="https://hub.docker.com/r/libzonda/flclash-web"><img src="https://img.shields.io/docker/pulls/libzonda/flclash-web?style=flat-square&logo=docker" alt="Docker Pulls"></a>
+  <a href="https://github.com/libzonda/FLClash-web/releases"><img src="https://img.shields.io/badge/arch-amd64%20%7C%20arm64-brightgreen?style=flat-square" alt="Architecture"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License"></a>
 </p>
 
 ![FlClash-web](screenshots/01.png)
