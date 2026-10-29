@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ghcr.io/chen08209/flclash-web:latest
+    image: ghcr.io/libzonda/flclash-web:latest
     container_name: flclash-web
     restart: unless-stopped
     # Use host network mode for transparent proxy / TUN routing on Linux,

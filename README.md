@@ -13,7 +13,7 @@
 ```yaml
 services:
   flclash-web:
-    image: ghcr.io/<your-username>/flclash-web:latest
+    image: ghcr.io/libzonda/flclash-web:latest
     container_name: flclash-web
     restart: unless-stopped
     ports:
@@ -52,7 +52,7 @@ docker compose up -d
 
 ```bash
 # 1. 克隆代码（递归拉取子模块）
-git clone --recursive https://github.com/<your-username>/FlClash-web.git
+git clone --recursive https://github.com/libzonda/flclash-web.git
 cd FlClash-web
 
 # 2. 一键构建 Docker 镜像（自动拉取上游最新稳定 Tag 编译）
