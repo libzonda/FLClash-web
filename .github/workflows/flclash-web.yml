@@ -185,6 +185,32 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Prepare merged bilingual README for Docker Hub
+        if: steps.dockerhub.outputs.enabled == 'true'
+        run: |
+          python3 -c '
+          import re
+
+          with open("README.md", "r", encoding="utf-8") as f:
+              en = f.read()
+
+          with open("README_zh-CN.md", "r", encoding="utf-8") as f:
+              zh = f.read()
+
+          # Strip language switcher block from English README
+          en_clean = re.sub(r"<p align=\"center\">\s*.*?(?:English|简体中文).*?</p>\s*", "", en, flags=re.DOTALL)
+
+          # Extract Chinese sections from introduction onwards
+          zh_match = re.search(r"## 1 项目介绍.*", zh, re.DOTALL)
+          zh_content = zh_match.group(0) if zh_match else zh
+
+          # Merge English and Chinese seamlessly
+          merged = en_clean.strip() + "\n\n---\n\n# 简体中文\n\n" + zh_content.strip() + "\n"
+
+          with open("README_DOCKERHUB.md", "w", encoding="utf-8") as f:
+              f.write(merged)
+          '
+
       - name: Sync README to Docker Hub
         if: steps.dockerhub.outputs.enabled == 'true'
         uses: peter-evans/dockerhub-description@v4
@@ -192,7 +218,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
-          readme-filepath: ./README.md
+          readme-filepath: ./README_DOCKERHUB.md
           short-description: "FlClash compiled to native Flutter Web with embedded Clash.Meta core."
           enable-url-completion: true
 
