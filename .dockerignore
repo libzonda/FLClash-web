@@ -1,0 +1,9 @@
+# Build caches and local artifacts
+FlClash/.dart_tool
+FlClash/build
+FlClash/core/cmd/flclash-web/web_dist/*
+!FlClash/core/cmd/flclash-web/web_dist/index.html
+.git
+FlClash/.git
+FlClash/core/Clash.Meta/.git
+

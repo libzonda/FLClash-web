@@ -1,0 +1,30 @@
+# Build outputs
+dist/
+build/
+*.tar.gz
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Runtime data & temp files
+data/
+*.log
+.web_patch_backup.json
+FlClash/.web_patch_backup.json

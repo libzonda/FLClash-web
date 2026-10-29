@@ -1,0 +1,12 @@
+{
+    "name": "FlClash-web",
+    "short_name": "FlClash-web",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#121212",
+    "theme_color": "#64b5f6",
+    "description": "Multi-platform proxy client based on ClashMeta (Native Flutter Web)",
+    "orientation": "any",
+    "prefer_related_applications": false
+}
+

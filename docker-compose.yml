@@ -1,0 +1,27 @@
+services:
+  flclash-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/chen08209/flclash-web:latest
+    container_name: flclash-web
+    restart: unless-stopped
+    # Use host network mode for transparent proxy / TUN routing on Linux,
+    # or comment out network_mode: host and use the ports mapping below.
+    # network_mode: host
+    ports:
+      - "9090:9090"         # FlClash-web Native Flutter Web UI
+      - "7890:7890/tcp"     # Clash Mixed Proxy (HTTP + SOCKS5)
+      - "7890:7890/udp"     # Clash Mixed Proxy UDP
+    environment:
+      - TZ=Asia/Shanghai
+      - FLCLASH_WEB_LISTEN=0.0.0.0:9090
+      - FLCLASH_DATA_DIR=/data
+    volumes:
+      - ./data:/data
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+

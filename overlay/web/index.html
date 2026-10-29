@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="FlClash-web - Multi-platform proxy client based on ClashMeta, compiled to native Flutter Web">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="FlClash-web">
+  <link rel="manifest" href="manifest.json">
+  <title>FlClash-web</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #121212;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+    #flclash-loader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #121212;
+      z-index: 9999;
+      transition: opacity 0.25s ease;
+    }
+    .spinner {
+      width: 42px;
+      height: 42px;
+      border: 3px solid rgba(255, 255, 255, 0.15);
+      border-top-color: #64b5f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+  <script>
+    window.__flclashWeb = {
+      bytesToBase64: function(bytes) {
+        let binary = '';
+        const len = bytes.byteLength;
+        const chunkSize = 0x8000;
+        for (let i = 0; i < len; i += chunkSize) {
+          binary += String.fromCharCode.apply(null, bytes.subarray(i, Math.min(i + chunkSize, len)));
+        }
+        return window.btoa(binary);
+      },
+      base64ToBytes: function(b64) {
+        const binary = window.atob(b64);
+        const len = binary.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+      },
+      syncJsonRequest: function(method, url, jsonBody) {
+        try {
+          const xhr = new XMLHttpRequest();
+          xhr.open(method, url, false);
+          if (jsonBody !== undefined && jsonBody !== null) {
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(jsonBody);
+          } else {
+            xhr.send(null);
+          }
+          return JSON.stringify({
+            status: xhr.status,
+            text: xhr.responseText || ''
+          });
+        } catch (e) {
+          return JSON.stringify({
+            status: 500,
+            error: String(e)
+          });
+        }
+      },
+      syncBinaryWrite: function(url, base64Body) {
+        try {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', url, false);
+          xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+          const bytes = window.__flclashWeb.base64ToBytes(base64Body || '');
+          xhr.send(bytes);
+          return JSON.stringify({
+            status: xhr.status,
+            text: xhr.responseText || ''
+          });
+        } catch (e) {
+          return JSON.stringify({
+            status: 500,
+            error: String(e)
+          });
+        }
+      },
+      syncReadBase64: function(vpath) {
+        try {
+          const statXhr = new XMLHttpRequest();
+          statXhr.open('GET', '/api/fs/stat?path=' + encodeURIComponent(vpath), false);
+          statXhr.send(null);
+          if (statXhr.status !== 200) {
+            return JSON.stringify({ exists: false });
+          }
+          const statObj = JSON.parse(statXhr.responseText);
+          if (!statObj.exists || statObj.isDir) {
+            return JSON.stringify(statObj);
+          }
+          const readXhr = new XMLHttpRequest();
+          readXhr.open('GET', '/api/fs/read?path=' + encodeURIComponent(vpath), false);
+          readXhr.overrideMimeType('text/plain; charset=x-user-defined');
+          readXhr.send(null);
+          if (readXhr.status !== 200) {
+            return JSON.stringify({ exists: false });
+          }
+          const raw = readXhr.responseText;
+          const bytes = new Uint8Array(raw.length);
+          for (let i = 0; i < raw.length; i++) {
+            bytes[i] = raw.charCodeAt(i) & 0xff;
+          }
+          statObj.contentBase64 = window.__flclashWeb.bytesToBase64(bytes);
+          return JSON.stringify(statObj);
+        } catch (e) {
+          return JSON.stringify({ exists: false, error: String(e) });
+        }
+      },
+      triggerDownload: function(filename, base64Data) {
+        try {
+          const bytes = window.__flclashWeb.base64ToBytes(base64Data);
+          const blob = new Blob([bytes], { type: 'application/octet-stream' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename || 'download';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
+          return true;
+        } catch (e) {
+          console.error('[FlClash-web] triggerDownload error:', e);
+          return false;
+        }
+      },
+      pickFile: function() {
+        return new Promise((resolve) => {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.style.display = 'none';
+          let settled = false;
+          const finish = (val) => {
+            if (settled) return;
+            settled = true;
+            if (input.parentNode) input.parentNode.removeChild(input);
+            resolve(JSON.stringify(val));
+          };
+          input.onchange = async () => {
+            if (!input.files || input.files.length === 0) {
+              finish({ cancelled: true });
+              return;
+            }
+            const file = input.files[0];
+            const buf = await file.arrayBuffer();
+            const b64 = window.__flclashWeb.bytesToBase64(new Uint8Array(buf));
+            finish({
+              cancelled: false,
+              name: file.name,
+              size: file.size,
+              base64: b64
+            });
+          };
+          input.oncancel = () => finish({ cancelled: true });
+          document.body.appendChild(input);
+          input.click();
+        });
+      },
+      evalClashScript: function(scriptSource, configJsonStr, profileName) {
+        try {
+          const configObj = JSON.parse(configJsonStr);
+          const fn = new Function('config', 'profileName', scriptSource + '\n; return main(config, profileName);');
+          const res = fn(configObj, profileName || '');
+          return JSON.stringify({ ok: true, data: JSON.stringify(res) });
+        } catch (e) {
+          return JSON.stringify({ ok: false, error: String(e) });
+        }
+      }
+    };
+
+    window.addEventListener('flutter-first-frame', function() {
+      const loader = document.getElementById('flclash-loader');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.remove(), 300);
+      }
+    });
+  </script>
+</head>
+<body>
+  <div id="flclash-loader">
+    <div class="spinner"></div>
+    <div>Loading FlClash-web...</div>
+  </div>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
+
