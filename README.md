@@ -62,3 +62,10 @@ cd FlClash-web
 # 2. 一键构建 Docker 镜像（自动拉取上游最新稳定 Tag 编译）
 docker build -t flclash-web:latest .
 ```
+
+---
+
+## 开源协议与致谢
+
+- 本项目基于 [GPL-3.0 License](LICENSE) 开源。
+- 特别感谢原项目 [FlClash](https://github.com/chen08209/FlClash) 及其作者 [chen08209](https://github.com/chen08209)。
