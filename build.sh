@@ -82,19 +82,38 @@ echo "[6/6] Compiling standalone FlClash-web binary..."
 mkdir -p "${DIST_DIR}"
 TAGS="$(sed -n 's/^tags: *//p' "${FLCLASH_DIR}/build_config.yaml" || echo "with_gvisor")"
 TARGET_OS="${GOOS:-linux}"
-TARGET_ARCH="${GOARCH:-$(go env GOARCH)}"
-OUTPUT_BIN="${DIST_DIR}/FlClash-web-${TARGET_OS}-${TARGET_ARCH}"
-VERSIONED_BIN="${DIST_DIR}/FlClash-web-${VERSION}-${TARGET_OS}-${TARGET_ARCH}"
+BUILD_ARCHS="${BUILD_ARCHS:-${GOARCH:-$(go env GOARCH)}}"
 
 pushd "${FLCLASH_DIR}/core" >/dev/null
-CGO_ENABLED=0 GOOS="${TARGET_OS}" GOARCH="${TARGET_ARCH}" \
-  go build -trimpath -tags "${TAGS}" -ldflags "-w -s -X main.Version=${VERSION}" \
-  -o "${OUTPUT_BIN}" ./cmd/flclash-web
+for ARCH in ${BUILD_ARCHS}; do
+  echo "      Compiling binary for ${TARGET_OS}/${ARCH}..."
+  OUTPUT_BIN="${DIST_DIR}/FlClash-web-${TARGET_OS}-${ARCH}"
+  VERSIONED_BIN="${DIST_DIR}/FlClash-web-${VERSION}-${TARGET_OS}-${ARCH}"
+
+  CGO_ENABLED=0 GOOS="${TARGET_OS}" GOARCH="${ARCH}" \
+    go build -trimpath -tags "${TAGS}" -ldflags "-w -s -X main.Version=${VERSION}" \
+    -o "${OUTPUT_BIN}" ./cmd/flclash-web
+
+  cp -f "${OUTPUT_BIN}" "${VERSIONED_BIN}"
+  chmod +x "${OUTPUT_BIN}" "${VERSIONED_BIN}"
+
+  # Package tar.gz release bundle
+  tar -czf "${DIST_DIR}/FlClash-web-${VERSION}-${TARGET_OS}-${ARCH}.tar.gz" \
+    -C "${DIST_DIR}" "FlClash-web-${VERSION}-${TARGET_OS}-${ARCH}"
+done
 popd >/dev/null
 
-cp -f "${OUTPUT_BIN}" "${VERSIONED_BIN}"
-cp -f "${OUTPUT_BIN}" "${DIST_DIR}/FlClash-web"
-chmod +x "${OUTPUT_BIN}" "${VERSIONED_BIN}" "${DIST_DIR}/FlClash-web"
+# Default executable for local host architecture
+HOST_ARCH="$(go env GOARCH)"
+if [ -f "${DIST_DIR}/FlClash-web-${TARGET_OS}-${HOST_ARCH}" ]; then
+  cp -f "${DIST_DIR}/FlClash-web-${TARGET_OS}-${HOST_ARCH}" "${DIST_DIR}/FlClash-web"
+  chmod +x "${DIST_DIR}/FlClash-web"
+fi
+
+# Generate SHA256 checksums
+pushd "${DIST_DIR}" >/dev/null
+sha256sum FlClash-web-${VERSION}-* > "FlClash-web-${VERSION}-checksums.txt" 2>/dev/null || true
+popd >/dev/null
 
 echo "========================================================"
 echo "  Build complete!"
