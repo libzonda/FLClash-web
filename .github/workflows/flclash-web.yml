@@ -123,27 +123,39 @@ jobs:
           mkdir -p FlClash/core/cmd/flclash-web/web_dist dist
           cp -r FlClash/build/web/. FlClash/core/cmd/flclash-web/web_dist/
 
+          VER="${{ steps.meta.outputs.version }}"
           cd FlClash/core
           for ARCH in amd64 arm64; do
-            echo "Building FlClash-web-linux-${ARCH}..."
+            echo "Building FlClash-web for linux-${ARCH} (v${VER})..."
             CGO_ENABLED=0 GOOS=linux GOARCH="${ARCH}" \
               go build -trimpath -tags "${{ steps.meta.outputs.tags }}" \
-              -ldflags "-w -s -X main.Version=${{ steps.meta.outputs.version }}" \
-              -o "../../dist/FlClash-web-linux-${ARCH}" ./cmd/flclash-web
-            chmod +x "../../dist/FlClash-web-linux-${ARCH}"
+              -ldflags "-w -s -X main.Version=${VER}" \
+              -o "../../dist/FlClash-web-${VER}-linux-${ARCH}" ./cmd/flclash-web
+            chmod +x "../../dist/FlClash-web-${VER}-linux-${ARCH}"
+
+            # Standard compatibility copy for Dockerfile.ci and general use
+            cp -f "../../dist/FlClash-web-${VER}-linux-${ARCH}" "../../dist/FlClash-web-linux-${ARCH}"
+
+            # Package tar.gz release bundle
+            tar -czf "../../dist/FlClash-web-${VER}-linux-${ARCH}.tar.gz" \
+              -C "../../dist" "FlClash-web-${VER}-linux-${ARCH}"
           done
+
+          cd ../../dist
+          sha256sum FlClash-web-${VER}-linux-* > "FlClash-web-${VER}-checksums.txt"
 
       - name: Upload standalone binary artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: flclash-web-linux-binaries
-          path: dist/FlClash-web-linux-*
+          name: flclash-web-${{ steps.meta.outputs.version }}-linux
+          path: |
+            dist/FlClash-web*
           retention-days: 14
 
       - name: Upload compiled Flutter Web dist
         uses: actions/upload-artifact@v4
         with:
-          name: flclash-web-static-dist
+          name: flclash-web-${{ steps.meta.outputs.version }}-static-dist
           path: FlClash/build/web
           retention-days: 7
 
@@ -154,8 +166,11 @@ jobs:
           tag_name: "v${{ steps.meta.outputs.version }}"
           name: "FlClash-web v${{ steps.meta.outputs.version }}"
           files: |
-            dist/FlClash-web-linux-amd64
-            dist/FlClash-web-linux-arm64
+            dist/FlClash-web-${{ steps.meta.outputs.version }}-linux-amd64.tar.gz
+            dist/FlClash-web-${{ steps.meta.outputs.version }}-linux-arm64.tar.gz
+            dist/FlClash-web-${{ steps.meta.outputs.version }}-linux-amd64
+            dist/FlClash-web-${{ steps.meta.outputs.version }}-linux-arm64
+            dist/FlClash-web-${{ steps.meta.outputs.version }}-checksums.txt
           generate_release_notes: true
 
   docker-publish:
@@ -169,7 +184,7 @@ jobs:
       - name: Download prebuilt standalone binaries
         uses: actions/download-artifact@v4
         with:
-          name: flclash-web-linux-binaries
+          name: flclash-web-${{ needs.build-binaries-and-web.outputs.version }}-linux
           path: dist
 
       - name: Generate fast multi-arch runtime Dockerfile from prebuilt binaries

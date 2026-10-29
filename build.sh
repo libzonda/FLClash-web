@@ -84,6 +84,7 @@ TAGS="$(sed -n 's/^tags: *//p' "${FLCLASH_DIR}/build_config.yaml" || echo "with_
 TARGET_OS="${GOOS:-linux}"
 TARGET_ARCH="${GOARCH:-$(go env GOARCH)}"
 OUTPUT_BIN="${DIST_DIR}/FlClash-web-${TARGET_OS}-${TARGET_ARCH}"
+VERSIONED_BIN="${DIST_DIR}/FlClash-web-${VERSION}-${TARGET_OS}-${TARGET_ARCH}"
 
 pushd "${FLCLASH_DIR}/core" >/dev/null
 CGO_ENABLED=0 GOOS="${TARGET_OS}" GOARCH="${TARGET_ARCH}" \
@@ -91,8 +92,9 @@ CGO_ENABLED=0 GOOS="${TARGET_OS}" GOARCH="${TARGET_ARCH}" \
   -o "${OUTPUT_BIN}" ./cmd/flclash-web
 popd >/dev/null
 
+cp -f "${OUTPUT_BIN}" "${VERSIONED_BIN}"
 cp -f "${OUTPUT_BIN}" "${DIST_DIR}/FlClash-web"
-chmod +x "${OUTPUT_BIN}" "${DIST_DIR}/FlClash-web"
+chmod +x "${OUTPUT_BIN}" "${VERSIONED_BIN}" "${DIST_DIR}/FlClash-web"
 
 echo "========================================================"
 echo "  Build complete!"
