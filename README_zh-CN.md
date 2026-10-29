@@ -1,4 +1,6 @@
-# [FlClash-web](https://github.com/libzonda/FLClash-web)
+<h1 align="center">
+  <a href="https://github.com/libzonda/FLClash-web">FlClash-web</a>
+</h1>
 
 <p align="center">
   <a href="README.md">English</a> | <b>简体中文</b>
