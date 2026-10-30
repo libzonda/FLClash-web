@@ -201,6 +201,14 @@
       }
     };
 
+    // Disable native browser context menu to avoid conflicts with FlClash UI
+    window.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    }, true);
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    }, true);
+
     window.addEventListener('flutter-first-frame', function() {
       const loader = document.getElementById('flclash-loader');
       if (loader) {
@@ -210,7 +218,7 @@
     });
   </script>
 </head>
-<body>
+<body oncontextmenu="return false;">
   <div id="flclash-loader">
     <div class="spinner"></div>
     <div>Loading FlClash-web...</div>
