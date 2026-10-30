@@ -71,7 +71,70 @@ docker compose up -d
 
 ---
 
-## 3 Build from Source
+## 3 Best Practices
+
+### 3.1 Configure Core Auto-start
+To ensure the proxy core starts automatically after container launch or server reboot without requiring manual activation via the Web UI:
+- Open the Web UI, navigate to **Tools** -> **General** -> **Startup & Background** -> enable **Auto Run**.
+
+### 3.2 Bypass Router Mode (Macvlan Dedicated IP)
+Using Docker Macvlan to assign a dedicated LAN IP to FlClash-web avoids host port conflicts (such as port 53 occupied by systemd-resolved) and seamlessly routes traffic for LAN devices.
+
+#### Step 1: Create Macvlan Network
+Run on your host machine (replace `eth0`, subnet, and gateway with your network parameters):
+
+```bash
+# 1. Enable promiscuous mode on the host network interface
+sudo ip link set eth0 promisc on
+
+# 2. Create Docker macvlan network
+docker network create -d macvlan \
+  --subnet=192.168.1.0/24 \
+  --gateway=192.168.1.1 \
+  -o parent=eth0 flclash_net
+```
+
+#### Step 2: Deploy Container with Dedicated IP
+Create `docker-compose.yml` (assuming assigned IP is `192.168.1.200`):
+
+```yaml
+services:
+  flclash-web:
+    image: ghcr.io/libzonda/flclash-web:latest
+    container_name: flclash-web
+    restart: unless-stopped
+    networks:
+      flclash_net:
+        ipv4_address: 192.168.1.200   # Dedicated LAN IP for FlClash
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ./data:/data
+    environment:
+      - TZ=Asia/Shanghai
+      - FLCLASH_WEB_LISTEN=0.0.0.0:9090
+      - FLCLASH_DATA_DIR=/data
+
+networks:
+  flclash_net:
+    external: true
+```
+
+#### Step 3: Configure FlClash Panel and Target Devices
+1. **Enable Port 53 DNS Listening**:
+   - Access `http://192.168.1.200:9090`, go to **Tools** -> **Advanced Settings** -> **DNS**;
+   - Click **Add Override** -> change **Listen Address** to `0.0.0.0:53` and save, then enable **TUN Mode**.
+2. **Target Device Network Configuration (PC / Phone / TV)**:
+   - Configure IPv4 manually:
+     - **Gateway**: `192.168.1.200`
+     - **Preferred DNS**: `192.168.1.200`
+
+---
+
+## 4 Build from Source
 
 No local Flutter or Go development environment is required. You can build the container image directly via Docker multi-stage build:
 

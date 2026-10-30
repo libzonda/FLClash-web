@@ -71,7 +71,70 @@ docker compose up -d
 
 ---
 
-## 3 自行构建方式
+## 3 最佳实践
+
+### 3.1 配置核心自启动
+为确保容器启动或服务器重启后代理核心自动运行（无需每次手动进入 Web 界面点击启动）：
+- 打开 Web 界面，进入 **工具** -> **常规** -> **启动与后台** -> 勾选 **启用自动运行** 选项。
+
+### 3.2 旁路由透明网关模式（Macvlan 独立 IP）
+通过 Docker Macvlan 网络为 FlClash-web 分配局域网独立 IP，可避免宿主机端口冲突（如 53 端口占用），轻松实现局域网内单台或多台设备无感透明分流。
+
+#### 第一步：创建 Macvlan 独立网络
+在宿主机执行（请将 `eth0` 替换为你的物理网卡名称，网段及网关根据实际网络修改）：
+
+```bash
+# 1. 开启宿主机网卡混杂模式
+sudo ip link set eth0 promisc on
+
+# 2. 创建 Docker macvlan 网络
+docker network create -d macvlan \
+  --subnet=192.168.1.0/24 \
+  --gateway=192.168.1.1 \
+  -o parent=eth0 flclash_net
+```
+
+#### 第二步：使用独立 IP 启动容器
+编写 `docker-compose.yml`（假设分配独立 IP 为 `192.168.1.200`）：
+
+```yaml
+services:
+  flclash-web:
+    image: ghcr.io/libzonda/flclash-web:latest
+    container_name: flclash-web
+    restart: unless-stopped
+    networks:
+      flclash_net:
+        ipv4_address: 192.168.1.200   # 分配给 FlClash 的局域网独立 IP
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ./data:/data
+    environment:
+      - TZ=Asia/Shanghai
+      - FLCLASH_WEB_LISTEN=0.0.0.0:9090
+      - FLCLASH_DATA_DIR=/data
+
+networks:
+  flclash_net:
+    external: true
+```
+
+#### 第三步：FlClash 面板与目标设备配置
+1. **开放 53 端口 DNS 监听**：
+   - 访问 `http://192.168.1.200:9090`，进入 **工具** -> **进阶配置** -> **DNS**；
+   - 点击 **添加覆写项** -> 将 **监听地址** 修改为 `0.0.0.0:53` 并保存，开启 **TUN 模式**。
+2. **目标设备（手机/电脑/电视等）网络设置**：
+   - 手动配置 IPv4：
+     - **网关**：`192.168.1.200`
+     - **首选 DNS**：`192.168.1.200`
+
+---
+
+## 4 自行构建方式
 
 宿主机无需安装 Flutter 和 Go 环境，直接使用 Docker 多阶段构建即可：
 
