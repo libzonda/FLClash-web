@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo.jpg" alt="FlClash-web Logo" width="128">
+  <img src="icon.png" alt="FlClash-web" width="128">
 </p>
 
 <h1 align="center">
