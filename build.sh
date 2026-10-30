@@ -17,7 +17,7 @@ echo "========================================================"
 FLCLASH_TAG="${FLCLASH_TAG:-latest}"
 if [ -d "${FLCLASH_DIR}/.git" ]; then
   echo "[1/6] Resolving upstream FlClash release tag (FLCLASH_TAG=${FLCLASH_TAG})..."
-  git -C "${FLCLASH_DIR}" fetch --tags --depth=1 origin 2>/dev/null || true
+  git -C "${FLCLASH_DIR}" fetch --tags origin 2>/dev/null || true
   if [ "${FLCLASH_TAG}" = "latest" ]; then
     RESOLVED_TAG="$(git -C "${FLCLASH_DIR}" tag -l "v*" --sort="version:refname" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | tail -n 1)"
     if [ -z "${RESOLVED_TAG}" ]; then
@@ -25,8 +25,19 @@ if [ -d "${FLCLASH_DIR}/.git" ]; then
     fi
   else
     RESOLVED_TAG="${FLCLASH_TAG}"
+    # Automatically add 'v' prefix if user input "0.9.3" instead of "v0.9.3"
+    if [[ "${RESOLVED_TAG}" =~ ^[0-9] ]]; then
+      RESOLVED_TAG="v${RESOLVED_TAG}"
+    fi
   fi
+
   if [ -n "${RESOLVED_TAG}" ]; then
+    # Ensure the target tag/commit is fetched from upstream if not already present
+    if ! git -C "${FLCLASH_DIR}" rev-parse --verify "${RESOLVED_TAG}^{commit}" >/dev/null 2>&1; then
+      echo "      Fetching tag ${RESOLVED_TAG} from upstream..."
+      git -C "${FLCLASH_DIR}" fetch origin "refs/tags/${RESOLVED_TAG}:refs/tags/${RESOLVED_TAG}" 2>/dev/null || \
+      git -C "${FLCLASH_DIR}" fetch --depth=1 origin "${RESOLVED_TAG}" 2>/dev/null || true
+    fi
     echo "      Targeting FlClash tag: ${RESOLVED_TAG}"
     git -C "${FLCLASH_DIR}" checkout -q "${RESOLVED_TAG}"
   fi
