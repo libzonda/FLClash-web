@@ -7,7 +7,7 @@
 </h1>
 
 <p align="center">
-  <b>一个 Flutter Web 构建的 FlClash</b>
+  一个 Flutter Web 构建的 <a href="https://github.com/chen08209/FlClash">FlClash</a>
 </p>
 
 <p align="center">

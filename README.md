@@ -7,7 +7,7 @@
 </h1>
 
 <p align="center">
-  <b>A Flutter Web build of FlClash</b>
+  A Flutter Web build of <a href="https://github.com/chen08209/FlClash">FlClash</a>
 </p>
 
 <p align="center">
