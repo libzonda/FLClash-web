@@ -7,9 +7,11 @@
     <a href="https://github.com/libzonda/FLClash-web/releases"><img src="https://img.shields.io/badge/arch-amd64%20%7C%20arm64-brightgreen?style=flat-square" alt="Architecture"></a>
     <a href="https://github.com/libzonda/FLClash-web/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License"></a>
   </p>
+  <p>
+    <img src="https://raw.githubusercontent.com/libzonda/FLClash-web/main/screenshots/01.png" width="75%" alt="FlClash-web Desktop" />
+    <img src="https://raw.githubusercontent.com/libzonda/FLClash-web/main/screenshots/phone01.jpg" width="21%" alt="FlClash-web Mobile" />
+  </p>
 </div>
-
-![FlClash-web](https://raw.githubusercontent.com/libzonda/FLClash-web/main/screenshots/01.png)
 
 [More Screenshots / 更多截图](https://github.com/libzonda/FLClash-web/tree/main/screenshots)
 

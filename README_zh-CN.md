@@ -20,7 +20,10 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License"></a>
 </p>
 
-![FlClash-web](screenshots/01.png)
+<p align="center">
+  <img src="screenshots/01.png" width="75%" alt="FlClash-web Desktop" />
+  <img src="screenshots/phone01.jpg" width="21%" alt="FlClash-web Mobile" />
+</p>
 
 [更多截图](screenshots/)
 
