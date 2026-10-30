@@ -1,12 +1,6 @@
 name: Build & Publish FlClash-web
 
 on:
-  push:
-    branches:
-      - main
-      - master
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       upstream_tag:
