@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.jpg" alt="FlClash-web Logo" width="128">
+</p>
+
 <h1 align="center">
   <a href="https://github.com/libzonda/FLClash-web">FlClash-web</a>
 </h1>
