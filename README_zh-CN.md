@@ -37,22 +37,23 @@ services:
     container_name: flclash-web
     restart: unless-stopped
     ports:
-      - "9090:9090"         # Web UI 控制面板
-      - "7890:7890/tcp"     # Clash 混合代理端口 (HTTP/SOCKS5)
+      - "9090:9090"         # Web UI 控制面板端口（默认 9090）
+      - "7890:7890/tcp"     # Clash 混合代理端口（默认 7890，HTTP/SOCKS5）
       - "7890:7890/udp"
     # 如需 TUN 模式透明代理，建议取消下一行注释使用 host 网络模式：
     # network_mode: host
     environment:
-      - TZ=Asia/Shanghai
-      - FLCLASH_WEB_LISTEN=0.0.0.0:9090
-      - FLCLASH_DATA_DIR=/data
+      - TZ=Asia/Shanghai                  # 容器时区（镜像默认 UTC，建议指定本地时区）
+      - FLCLASH_WEB_LISTEN=0.0.0.0:9090   # Web 监听地址（镜像默认即为 0.0.0.0:9090）
+      - FLCLASH_DATA_DIR=/data            # 数据存储路径（镜像默认即为 /data）
     volumes:
-      - ./data:/data
+      - ./data:/data        # 持久化配置与节点数据（容器内默认路径为 /data）
+    # 以下为 TUN 模式所需权限与虚拟网卡设备（若仅使用普通端口代理可不配）：
     cap_add:
-      - NET_ADMIN
+      - NET_ADMIN           # TUN 模式网络管理权限
       - NET_RAW
     devices:
-      - /dev/net/tun:/dev/net/tun
+      - /dev/net/tun:/dev/net/tun  # TUN 设备映射
 ```
 
 启动容器：

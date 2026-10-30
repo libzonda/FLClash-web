@@ -37,22 +37,23 @@ services:
     container_name: flclash-web
     restart: unless-stopped
     ports:
-      - "9090:9090"         # Web UI Dashboard
-      - "7890:7890/tcp"     # Clash Mixed Proxy Port (HTTP/SOCKS5)
+      - "9090:9090"         # Web UI Dashboard (default 9090)
+      - "7890:7890/tcp"     # Clash Mixed Proxy (default 7890, HTTP/SOCKS5)
       - "7890:7890/udp"
     # To enable transparent proxying in TUN mode, uncomment the line below to use host networking:
     # network_mode: host
     environment:
-      - TZ=Asia/Shanghai
-      - FLCLASH_WEB_LISTEN=0.0.0.0:9090
-      - FLCLASH_DATA_DIR=/data
+      - TZ=Asia/Shanghai                  # Timezone (default is UTC, recommended local)
+      - FLCLASH_WEB_LISTEN=0.0.0.0:9090   # Web listen address (default is 0.0.0.0:9090)
+      - FLCLASH_DATA_DIR=/data            # Data directory (default is /data)
     volumes:
-      - ./data:/data
+      - ./data:/data        # Persistent data storage (default container path is /data)
+    # Required only for TUN mode transparent proxying (optional for regular proxy):
     cap_add:
-      - NET_ADMIN
+      - NET_ADMIN           # Network administration privileges for TUN
       - NET_RAW
     devices:
-      - /dev/net/tun:/dev/net/tun
+      - /dev/net/tun:/dev/net/tun  # TUN device mapping
 ```
 
 Start the container:
