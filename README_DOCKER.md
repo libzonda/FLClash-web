@@ -1,24 +1,17 @@
-<p align="center">
-  <img src="icon.png" alt="FlClash-web" width="128">
-</p>
+<div align="center">
+  <img src="https://raw.githubusercontent.com/libzonda/FLClash-web/main/icon.png" alt="FlClash-web" width="128">
+  <h1><a href="https://github.com/libzonda/FLClash-web">FlClash-web</a></h1>
+  <p>A Flutter Web build of <a href="https://github.com/chen08209/FlClash">FlClash</a></p>
+  <p>
+    <a href="https://hub.docker.com/r/libzonda/flclash-web"><img src="https://img.shields.io/docker/pulls/libzonda/flclash-web?style=flat-square&logo=docker" alt="Docker Pulls"></a>
+    <a href="https://github.com/libzonda/FLClash-web/releases"><img src="https://img.shields.io/badge/arch-amd64%20%7C%20arm64-brightgreen?style=flat-square" alt="Architecture"></a>
+    <a href="https://github.com/libzonda/FLClash-web/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License"></a>
+  </p>
+</div>
 
-<h1 align="center">
-  <a href="https://github.com/libzonda/FLClash-web">FlClash-web</a>
-</h1>
+![FlClash-web](https://raw.githubusercontent.com/libzonda/FLClash-web/main/screenshots/01.png)
 
-<p align="center">
-  A Flutter Web build of <a href="https://github.com/chen08209/FlClash">FlClash</a>
-</p>
-
-<p align="center">
-  <a href="https://hub.docker.com/r/libzonda/flclash-web"><img src="https://img.shields.io/docker/pulls/libzonda/flclash-web?style=flat-square&logo=docker" alt="Docker Pulls"></a>
-  <a href="https://github.com/libzonda/FLClash-web/releases"><img src="https://img.shields.io/badge/arch-amd64%20%7C%20arm64-brightgreen?style=flat-square" alt="Architecture"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square" alt="License"></a>
-</p>
-
-![FlClash-web](screenshots/01.png)
-
-[More Screenshots / 更多截图](screenshots/)
+[More Screenshots / 更多截图](https://github.com/libzonda/FLClash-web/tree/main/screenshots)
 
 ## 1 Introduction
 
@@ -84,7 +77,7 @@ docker build -t flclash-web:latest .
 
 ## License & Acknowledgments
 
-- This project is licensed under the [GPL-3.0 License](LICENSE).
+- This project is licensed under the [GPL-3.0 License](https://github.com/libzonda/FLClash-web/blob/main/LICENSE).
 - Special thanks to the upstream project [FlClash](https://github.com/chen08209/FlClash) and its author [chen08209](https://github.com/chen08209).
 
 ---
@@ -155,6 +148,6 @@ docker build -t flclash-web:latest .
 
 ## 开源协议与致谢
 
-- 本项目基于 [GPL-3.0 License](LICENSE) 开源。
+- 本项目基于 [GPL-3.0 License](https://github.com/libzonda/FLClash-web/blob/main/LICENSE) 开源。
 - 特别感谢原项目 [FlClash](https://github.com/chen08209/FlClash) 及其作者 [chen08209](https://github.com/chen08209)。
 
