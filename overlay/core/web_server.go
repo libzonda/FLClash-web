@@ -639,7 +639,7 @@ func handleHttpProxy(w http.ResponseWriter, r *http.Request) {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		DialContext: (&net.Dialer{
-			Timeout:   15 * time.Second,
+			Timeout:   10 * time.Second,
 			KeepAlive: 15 * time.Second,
 		}).DialContext,
 	}
@@ -677,7 +677,7 @@ func handleHttpProxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := client.Do(outReq)
-	if err != nil && transport.Proxy != nil {
+	if err != nil && transport.Proxy != nil && ctx.Err() == nil {
 		transport.Proxy = nil
 		if req.BodyBase64 != "" {
 			rawBody, _ := base64.StdEncoding.DecodeString(req.BodyBase64)

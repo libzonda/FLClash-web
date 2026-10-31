@@ -69,7 +69,7 @@ class Dio with pkg_dio.DioMixin implements pkg_dio.Dio {
       initialSavePath = WebFileSystem.instance.normalize(savePath);
     }
 
-    final res = adapter.performProxyRequest(
+    final res = await adapter.performProxyRequestAsync(
       reqOptions,
       savePath: initialSavePath,
     );

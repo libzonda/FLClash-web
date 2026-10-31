@@ -70,6 +70,28 @@
         }
         return bytes;
       },
+      asyncJsonRequest: async function(method, url, jsonBody) {
+        try {
+          const options = {
+            method: method || 'GET',
+          };
+          if (jsonBody !== undefined && jsonBody !== null) {
+            options.headers = { 'Content-Type': 'application/json' };
+            options.body = jsonBody;
+          }
+          const resp = await fetch(url, options);
+          const text = await resp.text();
+          return JSON.stringify({
+            status: resp.status,
+            text: text || ''
+          });
+        } catch (e) {
+          return JSON.stringify({
+            status: 500,
+            error: String(e)
+          });
+        }
+      },
       syncJsonRequest: function(method, url, jsonBody) {
         try {
           const xhr = new XMLHttpRequest();

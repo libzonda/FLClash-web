@@ -25,7 +25,7 @@ class IOHttpClientAdapter implements pkg_dio.HttpClientAdapter {
     createHttpClient ??= onHttpClientCreate;
   }
 
-  Map<String, dynamic> performProxyRequest(
+  Map<String, dynamic> _buildProxyPayload(
     pkg_dio.RequestOptions options, {
     Uint8List? bodyBytes,
     String? savePath,
@@ -57,7 +57,7 @@ class IOHttpClientAdapter implements pkg_dio.HttpClientAdapter {
         options.connectTimeout?.inMilliseconds ??
         60000;
 
-    final payload = <String, dynamic>{
+    return <String, dynamic>{
       'method': options.method,
       'url': options.uri.toString(),
       'headers': headers,
@@ -68,8 +68,32 @@ class IOHttpClientAdapter implements pkg_dio.HttpClientAdapter {
         'bodyBase64': base64Encode(bodyBytes),
       if (savePath != null && savePath.isNotEmpty) 'savePath': savePath,
     };
+  }
 
+  Map<String, dynamic> performProxyRequest(
+    pkg_dio.RequestOptions options, {
+    Uint8List? bodyBytes,
+    String? savePath,
+  }) {
+    final payload = _buildProxyPayload(
+      options,
+      bodyBytes: bodyBytes,
+      savePath: savePath,
+    );
     return JsBridge.syncJsonRequest('POST', '/api/http-proxy', payload);
+  }
+
+  Future<Map<String, dynamic>> performProxyRequestAsync(
+    pkg_dio.RequestOptions options, {
+    Uint8List? bodyBytes,
+    String? savePath,
+  }) async {
+    final payload = _buildProxyPayload(
+      options,
+      bodyBytes: bodyBytes,
+      savePath: savePath,
+    );
+    return await JsBridge.asyncJsonRequest('POST', '/api/http-proxy', payload);
   }
 
   @override
@@ -87,7 +111,7 @@ class IOHttpClientAdapter implements pkg_dio.HttpClientAdapter {
       bodyBytes = builder.takeBytes();
     }
 
-    final res = performProxyRequest(options, bodyBytes: bodyBytes);
+    final res = await performProxyRequestAsync(options, bodyBytes: bodyBytes);
     if (res['ok'] != true) {
       throw pkg_dio.DioException(
         requestOptions: options,

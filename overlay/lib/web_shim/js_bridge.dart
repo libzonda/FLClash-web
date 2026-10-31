@@ -3,6 +3,13 @@ import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:typed_data';
 
+@JS('window.__flclashWeb.asyncJsonRequest')
+external JSPromise<JSString> _jsAsyncJsonRequest(
+  JSString method,
+  JSString url,
+  JSString? jsonBody,
+);
+
 @JS('window.__flclashWeb.syncJsonRequest')
 external JSString _jsSyncJsonRequest(
   JSString method,
@@ -57,6 +64,43 @@ class JsBridge {
 
   static void openUrl(String url) {
     _jsWindowOpen(url.toJS, '_blank'.toJS);
+  }
+
+  static Future<Map<String, dynamic>> asyncJsonRequest(
+    String method,
+    String url, [
+    Map<String, dynamic>? body,
+  ]) async {
+    try {
+      final jsPromise = _jsAsyncJsonRequest(
+        method.toJS,
+        url.toJS,
+        body != null ? jsonEncode(body).toJS : null,
+      );
+      final jsString = await jsPromise.toDart;
+      final raw = jsString.toDart;
+      final outer = jsonDecode(raw) as Map<String, dynamic>;
+      final status = outer['status'] as int? ?? 500;
+      final text = outer['text'] as String? ?? '';
+      if (status >= 200 && status < 300 && text.isNotEmpty) {
+        try {
+          return jsonDecode(text) as Map<String, dynamic>;
+        } catch (_) {
+          return {'ok': true, 'text': text};
+        }
+      }
+      return {
+        'ok': false,
+        'status': status,
+        'error': outer['error'] ?? text,
+      };
+    } catch (e) {
+      return {
+        'ok': false,
+        'status': 500,
+        'error': e.toString(),
+      };
+    }
   }
 
   static Map<String, dynamic> syncJsonRequest(

@@ -3,6 +3,7 @@ dist/
 build/
 *.tar.gz
 *.zip
+FlClash-web
 
 # Python
 __pycache__/
